@@ -36,7 +36,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.MessageViewHol
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MessageViewHolder holder, final int position) {
         final NewsItems newsItem = list.get(position);
         holder.title.setText(newsItem.getTitle());
         holder.desc.setText(newsItem.getDesc());
@@ -53,9 +53,10 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.MessageViewHol
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(newsItem.getUrl()));
-                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(i);
+               Intent i = new Intent(context,WebView.class);
+               i.putExtra("url",list.get(position).getUrl());
+               i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+               context.startActivity(i);
             }
         });
 

@@ -10,6 +10,8 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -18,6 +20,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,6 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.prefs.Preferences;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private RecyclerView recyclerView;
@@ -61,54 +65,71 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private String Address;
     private static boolean decide = false;
+    SharedPreferences preferences;
 
     Notification notification;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         declaraions();
-
-        int delay = 0; // delay for 0 sec.
-        int period = 1000; // repeat every 10 sec.
-        final Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask()
-        {
-            public void run()
+        if (preferences.contains("url")){
+            Intent i = new Intent(getApplicationContext(),WebView.class);
+            i.putExtra("url",preferences.getString("url",""));
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+        }
+        else{
+            int delay = 500; // delay for 0 sec.
+            int period = 1000; // repeat every 10 sec.
+            final Timer timer = new Timer();
+            timer.scheduleAtFixedRate(new TimerTask()
             {
-                //Call function
-                if (!URL_DATA.equals("")){
-                    loadRecycleViewData();
-                    timer.cancel();
+                public void run()
+                {
+                    //Call function
+                    if (!URL_DATA.equals("")){
+                        loadRecycleViewData();
+                        timer.cancel();
+                    }
+                    else
+                        loadRecycleViewData();
                 }
-                else
-                    loadRecycleViewData();
-            }
-        }, delay, period);
-        mFirebaseRemoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
-        .setDeveloperModeEnabled(true)
-        .build());
+            }, delay, period);
+            mFirebaseRemoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
+                    .setDeveloperModeEnabled(true)
+                    .build());
 
-        HashMap<String,Object> defaults = new HashMap<>();
-        defaults.put("ads",true);
-        mFirebaseRemoteConfig.setDefaults(defaults);
+            HashMap<String,Object> defaults = new HashMap<>();
+            defaults.put("ads",true);
+            mFirebaseRemoteConfig.setDefaults(defaults);
 
-        final Task<Void> fetch = mFirebaseRemoteConfig.fetch(0);
-        fetch.addOnSuccessListener(this, new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                mFirebaseRemoteConfig.activateFetched();
-                if (mFirebaseRemoteConfig.getBoolean("ads"))
-                    mAdView.setVisibility(View.VISIBLE);
-                else
-                    mAdView.setVisibility(View.GONE);
-            }
-        });
+            final Task<Void> fetch = mFirebaseRemoteConfig.fetch(0);
+            fetch.addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    mFirebaseRemoteConfig.activateFetched();
+                    if (mFirebaseRemoteConfig.getBoolean("ads"))
+                        mAdView.setVisibility(View.VISIBLE);
+                    else
+                        mAdView.setVisibility(View.GONE);
+                }
+            });
+        }
+
+
 
     }
 
     private void declaraions(){
+        preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         notification = Notification.getInstance();
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         recyclerView = findViewById(R.id.recycle);
@@ -148,6 +169,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        preferences.edit().clear().commit();
     }
 
     @Override
