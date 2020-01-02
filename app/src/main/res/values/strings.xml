@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">News</string>
+    <string name="apikey">5a92e7d12a834156a3521b603a95a3af</string>
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+</resources>
