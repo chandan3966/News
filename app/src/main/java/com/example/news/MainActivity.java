@@ -3,13 +3,18 @@ package com.example.news;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,6 +23,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -58,10 +64,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private LocationManager locationManager;
     private List<NewsItems> list;
     private String URL_DATA = "";
-    private int count =0;
+    private int count = 0;
     private ProgressDialog progressDialog;
     private static final String TAG = "MainActivity";
     private AdView mAdView;
+
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private String Address;
     private static boolean decide = false;
@@ -80,26 +87,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         declaraions();
-        if (preferences.contains("url")){
-            Intent i = new Intent(getApplicationContext(),WebView.class);
-            i.putExtra("url",preferences.getString("url",""));
+        if (preferences.contains("url")) {
+            Intent i = new Intent(getApplicationContext(), WebView.class);
+            i.putExtra("url", preferences.getString("url", ""));
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
-        }
-        else{
+        } else {
             int delay = 500; // delay for 0 sec.
             int period = 1000; // repeat every 10 sec.
             final Timer timer = new Timer();
-            timer.scheduleAtFixedRate(new TimerTask()
-            {
-                public void run()
-                {
+            timer.scheduleAtFixedRate(new TimerTask() {
+                public void run() {
                     //Call function
-                    if (!URL_DATA.equals("")){
+                    if (!URL_DATA.equals("")) {
                         loadRecycleViewData();
                         timer.cancel();
-                    }
-                    else
+                    } else
                         loadRecycleViewData();
                 }
             }, delay, period);
@@ -107,8 +110,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     .setDeveloperModeEnabled(true)
                     .build());
 
-            HashMap<String,Object> defaults = new HashMap<>();
-            defaults.put("ads",true);
+            HashMap<String, Object> defaults = new HashMap<>();
+            defaults.put("ads", true);
             mFirebaseRemoteConfig.setDefaults(defaults);
 
             final Task<Void> fetch = mFirebaseRemoteConfig.fetch(0);
@@ -124,11 +127,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             });
         }
 
-
-
     }
 
-    private void declaraions(){
+    private void declaraions() {
         preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         notification = Notification.getInstance();
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
@@ -146,11 +147,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         recyclerView.setHasFixedSize(true);
         recyclerView.setItemViewCacheSize(20);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
+
     }
+
 
     @Override
     public void onLocationChanged(Location location) {
@@ -163,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             String address = addresses.get(0).getCountryCode(); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
             Address = address.toLowerCase();
             if (URL_DATA.equals(""))
-                URL_DATA = "https://newsapi.org/v2/top-headlines?country="+Address+"&apiKey=5a92e7d12a834156a3521b603a95a3af";
+                URL_DATA = "https://newsapi.org/v2/top-headlines?country=" + Address + "&apiKey=5a92e7d12a834156a3521b603a95a3af";
 
 
         } catch (IOException e) {
@@ -192,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
-    private void loadRecycleViewData(){
+    private void loadRecycleViewData() {
         StringRequest stringRequest = new StringRequest(Request.Method.GET,
                 URL_DATA,
                 new Response.Listener<String>() {
@@ -202,21 +206,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             JSONObject jsonObject = new JSONObject(s);
                             JSONArray array = jsonObject.getJSONArray("articles");
 //                            Toast.makeText(getApplicationContext(),array.length()+"",Toast.LENGTH_SHORT).s
-                            for (int i=0;i<array.length();i++){
+                            for (int i = 0; i < array.length(); i++) {
                                 JSONObject o = array.getJSONObject(i);
                                 NewsItems item = new NewsItems(
-                                    o.getString("title"),
-                                    o.getString("author"),
-                                    o.getString("description"),
-                                    o.getString("url"),
-                                    o.getString("urlToImage"),
-                                    o.getString("publishedAt"),
-                                    o.getString("content")
+                                        o.getString("title"),
+                                        o.getString("author"),
+                                        o.getString("description"),
+                                        o.getString("url"),
+                                        o.getString("urlToImage"),
+                                        o.getString("publishedAt"),
+                                        o.getString("content")
                                 );
                                 list.add(item);
                             }
                             progressDialog.dismiss();
-                            adapter = new NewsAdapter(list,getApplicationContext());
+                            adapter = new NewsAdapter(list, getApplicationContext());
 //                            adapter.setHasStableIds(true);
                             recyclerView.setAdapter(adapter);
 
@@ -237,4 +241,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         requestQueue.add(stringRequest);
     }
+
+
+
+
+
 }
