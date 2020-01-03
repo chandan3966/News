@@ -36,7 +36,7 @@ public class WebView extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         preferences.edit().clear().commit();
-        startActivity(new Intent(WebView.this,MainActivity.class));
+//        startActivity(new Intent(WebView.this,MainActivity.class));
         finish();
     }
 

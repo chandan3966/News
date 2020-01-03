@@ -45,7 +45,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.MessageViewHol
         holder.time.setText(times[0]);
         holder.content.setText("Description : "+newsItem.getContent());
         if (newsItem.getAuth().equals(null))
-        holder.author.setText(newsItem.getAuth());
+            holder.author.setText(newsItem.getAuth());
         else
             holder.author.setVisibility(View.GONE);
         Glide.with(context).load(newsItem.getImg()).into(holder.imageView);
@@ -53,10 +53,10 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.MessageViewHol
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               Intent i = new Intent(context,WebView.class);
-               i.putExtra("url",list.get(position).getUrl());
-               i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-               context.startActivity(i);
+                Intent i = new Intent(context,WebView.class);
+                i.putExtra("url",list.get(position).getUrl());
+                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(i);
             }
         });
 
